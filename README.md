@@ -1,7 +1,7 @@
 # Simulador Monopoly - Desafio Técnico
 
 Este projeto é uma implementação de um simulador simplificado de um jogo do tipo Banco Imobiliário, desenvolvido em Python com FastAPI e PostgreSQL.
-O objetivo é permitir a execução de partidas automatizadas entre quatro perfis de jogadores, conforme as regras propostas no desafio técnico.
+O objetivo é permitir a execução de partidas automatizadas entre quatro perfis de jogadores, conforme as regras propostas. // Leia o COMMENTS.MD para valdiar Arquitetura e Funcionamento do simulador.
 
 ---
 
