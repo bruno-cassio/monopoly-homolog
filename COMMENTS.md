@@ -2,6 +2,12 @@
 
 
 ---
+## **Versão em Produção (AWS Elastic Beanstalk):**
+
+Criei uma versão de produção da API (exatamente a mesma deste projeto), feito o deploy no Elastic Beanstalk, em um container Docker (API + DB PostgreSQL), abaixo o link para acessar o swagger da aplicação. Docker pronto para clusterizer em um kubernets (ou outro orquestrador conforme necessidade de escalar)
+
+[Acesse o Swagger da API Online](http://monopoly-homolog-env.eba-enbifpvp.us-east-2.elasticbeanstalk.com/docs)
+
 ## Objetivo da entrega
 
 Este projeto implementa o **desafio técnico do jogo tipo Banco Imobiliário**, buscando atender todos os requisitos propostos pelo desafio:
@@ -54,7 +60,6 @@ Executa uma simulação completa de jogo.
   "jogadores": ["exigente", "impulsivo", "aleatorio", "cauteloso"]
 }
 ```
-
 
 ## Execução e interpretação dos resultados
 
