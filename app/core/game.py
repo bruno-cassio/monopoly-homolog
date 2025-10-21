@@ -3,6 +3,7 @@ from app.core.player import Impulsivo, Exigente, Cauteloso, Aleatorio
 from app.core.board import Board
 from app.db.dba import DBA
 
+
 class Game:
     def __init__(self):
         self.dba = DBA()
@@ -17,7 +18,7 @@ class Game:
         db_players = self.dba.get_active_players()
         db_props = self.dba.get_board_properties()
 
-        # Cria objetos jogadores conforme comportamento
+        # Cria objetos de jogador conforme comportamento
         for p in db_players:
             if p.behavior_type == "impulsivo":
                 self.players.append(Impulsivo(p.name, p.behavior_type))
@@ -28,18 +29,21 @@ class Game:
             else:
                 self.players.append(Aleatorio(p.name, p.behavior_type))
 
-        # Embaralha ordem inicial (definida aleatoriamente)
+        # Embaralha ordem inicial
         random.shuffle(self.players)
         self.active_players = len(self.players)
 
-        # Monta tabuleiro
+        # Monta o tabuleiro com as propriedades
         self.board = Board(db_props)
 
     def run(self):
         """Executa a simulação completa"""
         self.setup()
         round_count = 0
-        game_id = self.dba.create_game_result(self.dba.create_game_log())
+
+        # 🔹 Cria log e resultado do jogo
+        log_id = self.dba.create_game_log()
+        game_id = self.dba.create_game_result(log_id)
 
         while round_count < self.max_rounds and self.active_players > 1:
             round_count += 1
@@ -54,7 +58,7 @@ class Game:
                 player.move(dice, len(self.board.spaces))
                 current_property = self.board.get_property(player.position)
 
-                # Verifica a casa
+                # Verifica a casa em que caiu
                 if current_property.owner is None:
                     if player.decide_purchase(current_property):
                         player.buy(current_property)
@@ -79,7 +83,7 @@ class Game:
                     "balance": player.balance
                 })
 
-                # Verifica quebra
+                # Verifica quebra (falência)
                 if player.balance < 0:
                     player.active = False
                     self.active_players -= 1
@@ -87,15 +91,16 @@ class Game:
                         prop.reset_owner()
                     action += " e faliu!"
 
-            # Salva rodada
+            # Salva o snapshot da rodada
             self.dba.save_round_snapshot(game_id, round_count, {"events": round_events})
 
-        # Fim do jogo
+        # 🔹 Fim do jogo
         winner = max(
             [p for p in self.players if p.active],
             key=lambda x: x.balance,
             default=None
         )
+
         self.dba.update_game_result(
             game_id,
             total_rounds=round_count,
@@ -104,12 +109,14 @@ class Game:
             status="FINISHED"
         )
 
+        # usando agora o log_id criado no início (não get_active_players)
         self.dba.update_game_log(
-            log_id=self.dba.get_active_players()[0].id,  # simplificado
+            log_id=log_id,
             status="FINISHED",
             winner=winner.name if winner else "Empate"
         )
 
+        #  Retorna response da simulação
         return {
             "vencedor": winner.name if winner else "Empate",
             "rodadas": round_count,
