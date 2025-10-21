@@ -2,7 +2,8 @@
 FROM python:3.11-slim
 
 # Instalando dependências do sistema (desde raiz à inners)
-RUN apt-get update && apt-get install -y postgresql postgresql-contrib && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y postgresql-client && rm -rf /var/lib/apt/lists/*
+
 
 # Cria diretório da aplicação
 WORKDIR /app
