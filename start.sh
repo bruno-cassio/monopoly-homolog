@@ -1,40 +1,27 @@
 #!/bin/bash
 set -e
 
-echo "🏗️ Iniciando ambiente da aplicação Monopoly..."
+echo "🚀 Iniciando processo de inicialização do container..."
 
-# Espera o RDS estar acessível
-echo "⏳ Aguardando disponibilidade do banco de dados externo..."
-sleep 10
+# Carrega variáveis do .env
+export $(grep -v '^#' .env | xargs)
 
-# Testa conexão com o banco RDS
-python - <<'EOF'
-import psycopg2, os, time
-for i in range(10):
-    try:
-        conn = psycopg2.connect(
-            host=os.getenv("DB_HOST"),
-            port=os.getenv("DB_PORT"),
-            dbname=os.getenv("DB_NAME"),
-            user=os.getenv("DB_USER"),
-            password=os.getenv("DB_PASSWORD")
-        )
-        print("✅ Banco acessível, prosseguindo para inicialização.")
-        conn.close()
-        break
-    except Exception as e:
-        print(f"❌ Tentativa {i+1}/10 - Banco indisponível: {e}")
-        time.sleep(5)
-EOF
+echo "⏳ Aguardando conexão com banco RDS em $DB_HOST:$DB_PORT..."
+until pg_isready -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER"; do
+  sleep 3
+done
+echo "✅ Banco RDS acessível!"
 
-# Inicializa o banco apenas se ele ainda não tiver tabelas
-python - <<'EOF'
-from app.db import models
-from app.db.database import engine, Base
-print("🧩 Criando estrutura de tabelas, se ainda não existir...")
-Base.metadata.create_all(bind=engine)
-EOF
+# Testa se existem tabelas já criadas
+TABLE_COUNT=$(psql -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" -t -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='public';" | xargs)
 
-# Inicia a aplicação FastAPI
-echo "🚀 Iniciando API FastAPI na porta 8080..."
+if [ "$TABLE_COUNT" -eq 0 ]; then
+  echo "📦 Nenhuma tabela encontrada — aplicando init_db.sql..."
+  psql -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" -f init_db.sql
+  echo "✅ Tabelas criadas com sucesso!"
+else
+  echo "📋 Tabelas já existentes — pulando criação..."
+fi
+
+echo "🚀 Iniciando API FastAPI..."
 uvicorn app.main:app --host 0.0.0.0 --port 8080
