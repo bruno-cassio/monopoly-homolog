@@ -1,31 +1,40 @@
 #!/bin/bash
 set -e
 
-echo "🚀 Iniciando PostgreSQL (modo inicial)..."
-service postgresql start
-sleep 3
+echo "🏗️ Iniciando ambiente da aplicação Monopoly..."
 
-echo "🔧 Configurando autenticação temporária para trust..."
-# Muda para trust temporariamente (sem senha)
-sed -i "s/^local\s\+all\s\+postgres\s\+peer/local all postgres trust/" /etc/postgresql/*/main/pg_hba.conf
-sed -i "s/^local\s\+all\s\+all\s\+peer/local all all trust/" /etc/postgresql/*/main/pg_hba.conf
-service postgresql restart
-sleep 3
+# Espera o RDS estar acessível
+echo "⏳ Aguardando disponibilidade do banco de dados externo..."
+sleep 10
 
-echo "🔐 Definindo senha para o usuário postgres..."
-psql -U postgres -c "ALTER USER postgres PASSWORD '1234';"
+# Testa conexão com o banco RDS
+python - <<'EOF'
+import psycopg2, os, time
+for i in range(10):
+    try:
+        conn = psycopg2.connect(
+            host=os.getenv("DB_HOST"),
+            port=os.getenv("DB_PORT"),
+            dbname=os.getenv("DB_NAME"),
+            user=os.getenv("DB_USER"),
+            password=os.getenv("DB_PASSWORD")
+        )
+        print("✅ Banco acessível, prosseguindo para inicialização.")
+        conn.close()
+        break
+    except Exception as e:
+        print(f"❌ Tentativa {i+1}/10 - Banco indisponível: {e}")
+        time.sleep(5)
+EOF
 
-echo "🧩 Reativando autenticação segura (md5)..."
-# Agora volta para modo seguro com senha md5
-sed -i "s/^local\s\+all\s\+postgres\s\+trust/local all postgres md5/" /etc/postgresql/*/main/pg_hba.conf
-sed -i "s/^local\s\+all\s\+all\s\+trust/local all all md5/" /etc/postgresql/*/main/pg_hba.conf
-service postgresql restart
-sleep 3
+# Inicializa o banco apenas se ele ainda não tiver tabelas
+python - <<'EOF'
+from app.db import models
+from app.db.database import engine, Base
+print("🧩 Criando estrutura de tabelas, se ainda não existir...")
+Base.metadata.create_all(bind=engine)
+EOF
 
-echo "🗃️ Criando banco e aplicando init_db.sql..."
-PGPASSWORD=1234 psql -U postgres -h localhost -c "CREATE DATABASE simulador;" || true
-PGPASSWORD=1234 psql -U postgres -h localhost -d simulador -f /app/init_db.sql
-
-echo "✅ Banco configurado com sucesso!"
-echo "📦 Iniciando API FastAPI na porta 8080..."
+# Inicia a aplicação FastAPI
+echo "🚀 Iniciando API FastAPI na porta 8080..."
 uvicorn app.main:app --host 0.0.0.0 --port 8080
