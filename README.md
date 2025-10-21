@@ -6,6 +6,13 @@ O objetivo é permitir a execução de partidas automatizadas entre quatro perfi
 
 ---
 
+## **Versão em Produção (AWS Elastic Beanstalk):**
+
+Criei uma versão de produção da API (exatamente a mesma deste projeto), feito o deploy no Elastic Beanstalk, em um container Docker (API + DB PostgreSQL), abaixo o link para acessar o swagger da aplicação. Docker pronto para clusterizer em um kubernets (ou outro orquestrador conforme necessidade de escalar)
+
+[![AWS Elastic Beanstalk](https://img.shields.io/badge/Deploy-AWS_Elastic_Beanstalk-FF9900?logo=amazonaws&logoColor=white)](http://monopoly-homolog-freetier-env.eba-cy7ppwk3.us-east-2.elasticbeanstalk.com/docs#/)
+
+
 ## Objetivo
 
 Implementar uma API HTTP capaz de simular partidas de um jogo de tabuleiro, registrar resultados e expor o vencedor e o ranking final via Swagger.
