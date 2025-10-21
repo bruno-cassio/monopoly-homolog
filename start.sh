@@ -1,7 +1,10 @@
 #!/bin/bash
-set -e
+set +e  # evita encerramento imediato se pg_isready ou psql falharem brevemente
 
 echo "🚀 Iniciando processo de inicialização do container..."
+
+# Dá um tempim para o RDS respirar e responder
+sleep 10
 
 # Carrega variáveis do .env
 export $(grep -v '^#' .env | xargs)
