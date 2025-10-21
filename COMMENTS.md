@@ -1,4 +1,10 @@
 
+## **Versão em Produção (AWS Elastic Beanstalk):**
+
+Criei uma versão de produção da API (exatamente a mesma deste projeto), feito o deploy no Elastic Beanstalk, em um container Docker (API + DB PostgreSQL), abaixo o link para acessar o swagger da aplicação. Docker pronto para clusterizer em um kubernets (ou outro orquestrador conforme necessidade de escalar)
+
+[![AWS Elastic Beanstalk](https://img.shields.io/badge/Deploy-AWS_Elastic_Beanstalk-FF9900?logo=amazonaws&logoColor=white)](http://monopoly-homolog-freetier-env.eba-cy7ppwk3.us-east-2.elasticbeanstalk.com/docs#/)
+
 ## Objetivo da entrega
 
 Este projeto implementa o **desafio técnico do jogo tipo Banco Imobiliário**, buscando atender todos os requisitos propostos pelo desafio:
